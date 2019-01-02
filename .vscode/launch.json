@@ -10,7 +10,7 @@
 			"name": "Launch Program",
 			"program": "${workspaceFolder}\\index.js",
 			"args": [
-				"-h", "localhost", "192.168.0.10",
+				"-h", "192.168.0.10",
 				"-p", "502"
 			],
 			"console": "externalTerminal"

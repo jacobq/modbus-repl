@@ -1,8 +1,5 @@
 const readline = require('readline')
-// const ModbusRTU = require("modbus-serial")
 const modbus = require('jsmodbus')
-const net = require('net')
-
 const argv = require('yargs').argv
 const process = require('process')
 
@@ -38,18 +35,6 @@ function connectToServer(host, port) {
 		rl.close()
 		console.error(err)
 	})
-
-	// var client = new ModbusRTU()
-	// console.log(`Connecting to ${host}:${port}...`)
-	// client.connectTCP(host, { port: port }).then(() => {
-	// 	console.log('Connection established')
-	// 	promptForCommand(host, port, client)
-	// }, err => {
-	// 	rl.close()
-	// 	console.error(err)
-	// })
-
-	// client.setID(1)
 }
 
 function promptForServerConfig() {
@@ -128,7 +113,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readCoils(addr, cnt).then(resp => {
-			console.log(resp)
+			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
 			cb(err)
@@ -138,8 +123,6 @@ const methods = {
 	writeCoils(client, args, cb) {
 		const addr = Number(args[0])
 		const values = args.slice(1).map(el => Number(el) != 0 ? 1 : 0)
-
-		console.log(values)
 
 		client.writeMultipleCoils(addr, values).then(resp => {
 			console.log(resp)
@@ -154,7 +137,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readDiscreteInputs(addr, cnt).then(resp => {
-			console.log(resp)
+			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
 			cb(err)
@@ -166,7 +149,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readInputRegisters(addr, cnt).then(resp => {
-			console.log(resp.register.map(el => el.toString(16)).map(el => new Array(4 - el.length + 1).fill('').join('0') + el).map(el => `0x${el}`))
+			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
 	},
@@ -176,7 +159,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 		console.log(' trying to read')
 		client.readHoldingRegisters(addr, cnt).then(resp => {
-			console.log(resp.register.map(el => el.toString(16)).map(el => new Array(4 - el.length + 1).fill('').join('0') + el).map(el => `0x${el}`))
+			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
 	},
@@ -191,5 +174,57 @@ const methods = {
 		}, err => {
 			cb(err)
 		})
+	}
+}
+
+function printCoils(coils, addr, cnt) {
+	const addresses = new Array(cnt).fill(0).map((el, idx) => addr + idx).map(el => paddString(el, 5, '0'))
+	const values = coils.map(el => el ? '1' : '0').map(el => paddString(el, 5, ' '))
+
+	for (let q = 0; q < cnt; ++q) {
+		const addr = paddString(addresses[q], 5, ' ')
+		const val = paddString(values[q], 5, ' ')
+		console.log(`  ${addr} : ${val}`)
+	}
+}
+
+function printRegs(regs, addr, cnt) {
+	const addresses = new Array(cnt).fill(0).map((el, idx) => addr + idx).map(el => paddString(el, 5, '0'))
+	const values = regs.map(regToStr10)
+	const hexes = regs.map(regToStr16).map(regToHex)
+
+	for (let q = 0; q < cnt; ++q) {
+		const addr = paddString(addresses[q], 5, ' ')
+		const val = paddString(values[q], 5, ' ')
+		const hex = hexes[q]
+		console.log(`  ${addr} : ${val} | ${hex}`)
+	}
+}
+
+function regToStr10(el) {
+	return el.toString(10)
+}
+
+function regToStr16(el) {
+	return el.toString(16)
+}
+
+function regToHex(el) {
+	const elUpper = el.toUpperCase()
+	const elPadded = paddString(elUpper, 4, '0')
+	// const padding = new Array(4 - el.length + 1).fill('').join('0')
+	return `0x${elPadded}`
+	// return `0x${padding}${elUpper}`
+}
+
+function paddString(val, len, char) {
+	const str = `${val}`
+	const arrLen = len - str.length + 1
+
+	if (arrLen > 0) {
+		const padding = new Array(arrLen).fill('').join(char)
+		return `${padding}${str}`
+	} else {
+		return str
 	}
 }
