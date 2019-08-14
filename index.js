@@ -192,13 +192,29 @@ function printRegs(regs, addr, cnt) {
 	const addresses = new Array(cnt).fill(0).map((el, idx) => addr + idx).map(el => paddString(el, 5, '0'))
 	const values = regs.map(regToStr10)
 	const hexes = regs.map(regToStr16).map(regToHex)
+	const chars = regs.map(regToChars)
 
 	for (let q = 0; q < cnt; ++q) {
 		const addr = paddString(addresses[q], 5, ' ')
 		const val = paddString(values[q], 5, ' ')
 		const hex = hexes[q]
-		console.log(`  ${addr} : ${val} | ${hex}`)
+		const char = chars[q]
+		console.log(`  ${addr} : ${val} | ${hex} | ${char}`)
 	}
+}
+
+function valToChar(val) {
+	if (val < 33 || val > 126) {
+		return '.'
+	}
+
+	return String.fromCharCode(val)
+}
+
+function regToChars(el) {
+	const buf = Buffer.alloc(2)
+	buf.writeUInt16BE(el, 0)
+	return valToChar(buf[0]) + valToChar(buf[1])
 }
 
 function regToStr10(el) {
@@ -212,9 +228,7 @@ function regToStr16(el) {
 function regToHex(el) {
 	const elUpper = el.toUpperCase()
 	const elPadded = paddString(elUpper, 4, '0')
-	// const padding = new Array(4 - el.length + 1).fill('').join('0')
 	return `0x${elPadded}`
-	// return `0x${padding}${elUpper}`
 }
 
 function paddString(val, len, char) {
