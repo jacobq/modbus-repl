@@ -2,6 +2,7 @@ const readline = require('readline')
 const modbus = require('jsmodbus')
 const argv = require('yargs').argv
 const process = require('process')
+const UdpModbus = require('./udp-modbus')
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -10,6 +11,7 @@ const rl = readline.createInterface({
 
 let host = argv.h
 let port = Number(argv.p)
+let proto = argv.proto === 'udp' ? 'udp' : 'tcp'
 
 if (host && !isNaN(port)) {
 	connectToServer(host, port)
@@ -17,13 +19,21 @@ if (host && !isNaN(port)) {
 	promptForServerConfig()
 }
 
-function connectToServer(host, port) {
-	const client = new modbus.client.tcp.complete({
+function initClient(proto) {
+	if (proto === 'udp') {
+		return new UdpModbus(host, port)
+	}
+
+	return new modbus.client.tcp.complete({
 		host,
 		port,
 		autoReconnect: false,
 		timeout: 2500
 	})
+}
+
+function connectToServer(host, port) {
+	const client = initClient(proto)
 	client.connect()
 
 	client.on('connect', () => {
@@ -113,11 +123,12 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readCoils(addr, cnt).then(resp => {
+			console.log(resp)
 			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
 			cb(err)
-		})
+		}, cb)
 	},
 
 	writeCoils(client, args, cb) {
@@ -129,7 +140,7 @@ const methods = {
 			cb(null)
 		}, err => {
 			cb(err)
-		})
+		}, cb)
 	},
 
 	readDiscrete(client, args, cb) {
@@ -137,11 +148,12 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readDiscreteInputs(addr, cnt).then(resp => {
+			console.log(resp)
 			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
 			cb(err)
-		})
+		}, cb)
 	},
 
 	readInput(client, args, cb) {
@@ -149,6 +161,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readInputRegisters(addr, cnt).then(resp => {
+			console.log(resp)
 			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
@@ -159,6 +172,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 		console.log(' trying to read')
 		client.readHoldingRegisters(addr, cnt).then(resp => {
+			console.log(resp)
 			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
@@ -173,7 +187,7 @@ const methods = {
 			cb(null)
 		}, err => {
 			cb(err)
-		})
+		}, cb)
 	}
 }
 
