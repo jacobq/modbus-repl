@@ -1,14 +1,16 @@
 const readline = require('readline')
 const modbus = require('jsmodbus')
-const argv = require('yargs').argv
 const process = require('process')
 const UdpModbus = require('./udp-modbus')
+const config = require('./config')
 
-let host = argv.h
-let port = Number(argv.p)
-let proto = argv.proto === 'udp' ? 'udp' : 'tcp'
-const bInteractive = !argv.headless
-const command = argv.c || argv.command || null
+console.log(config)
+
+let host = config.host
+let port = config.port
+let proto = config.proto === 'udp' ? 'udp' : 'tcp'
+const bInteractive = !config.headless
+const command = config.command
 
 const log = bInteractive ? console.log : ()=>{}
 
