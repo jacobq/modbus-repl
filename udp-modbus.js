@@ -208,12 +208,6 @@ class UdpModbus extends EventEmitter {
 		for (let q = 0; q < velueBytes.length * 8; ++q) {
 			const byteIdx = Math.floor(q / 8)
 			const bitIdx = q % 8
-			console.log({
-				byteIdx,
-				bitIdx,
-				vbBI: velueBytes[byteIdx],
-				mask: (1 << bitIdx)
-			})
 			const val = velueBytes[byteIdx] & (1 << bitIdx)
 
 			result.push(val != 0)
