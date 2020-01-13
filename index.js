@@ -4,19 +4,33 @@ const argv = require('yargs').argv
 const process = require('process')
 const UdpModbus = require('./udp-modbus')
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
-
 let host = argv.h
 let port = Number(argv.p)
 let proto = argv.proto === 'udp' ? 'udp' : 'tcp'
+const bInteractive = !argv.headless
+const command = argv.c || argv.command || null
+
+const log = bInteractive ? console.log : ()=>{}
+
+const rl = bInteractive ? readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+}) : null
+
+if (!bInteractive && !command) {
+	console.error('headless mode requires --command argument')
+	process.exit(1)
+}
 
 if (host && !isNaN(port)) {
 	connectToServer(host, port)
 } else {
-	promptForServerConfig()
+	if (bInteractive) {
+		promptForServerConfig()
+	} else {
+		console.error('headless mode requires server host --address and --port')
+		process.exit(1)
+	}
 }
 
 function initClient(proto) {
@@ -37,12 +51,23 @@ function connectToServer(host, port) {
 	client.connect()
 
 	client.on('connect', () => {
-		console.log('Connection established')
-		promptForCommand(host, port, client)
+		log('Connection established')
+		if (bInteractive) {
+			promptForCommand(host, port, client)
+		} else {
+			parseCommand(client, command, (err) => {
+				if (err) {
+					console.error(err)
+				}
+				client.close()
+				if (rl) rl.close()
+				process.exit(0)
+			})
+		}
 	})
 
 	client.on('error', err => {
-		rl.close()
+		if (rl) rl.close()
 		console.error(err)
 	})
 }
@@ -66,7 +91,7 @@ function promptForCommand(host, port, client) {
 	rl.question(`${host}:${port} > `, (answer) => {
 		if (answer === 'exit' || answer === 'quit') {
 			client.close()
-			rl.close()
+			if (rl) rl.close()
 		} else {
 			parseCommand(client, answer, (err) => {
 				if (err) {
@@ -123,7 +148,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readCoils(addr, cnt).then(resp => {
-			console.log(resp)
+			log(resp)
 			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
@@ -136,7 +161,7 @@ const methods = {
 		const values = args.slice(1).map(el => Number(el) != 0 ? 1 : 0)
 
 		client.writeMultipleCoils(addr, values).then(resp => {
-			console.log(resp)
+			log(resp)
 			cb(null)
 		}, err => {
 			cb(err)
@@ -148,7 +173,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readDiscreteInputs(addr, cnt).then(resp => {
-			console.log(resp)
+			log(resp)
 			printCoils(resp.coils, addr, cnt)
 			cb(null)
 		}, err => {
@@ -161,7 +186,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readInputRegisters(addr, cnt).then(resp => {
-			console.log(resp)
+			log(resp)
 			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
@@ -170,9 +195,9 @@ const methods = {
 	readHolding(client, args, cb) {
 		const addr = Number(args[0])
 		const cnt = Number(args[1]) || 1
-		console.log(' trying to read')
+		log(' trying to read')
 		client.readHoldingRegisters(addr, cnt).then(resp => {
-			console.log(resp)
+			log(resp)
 			printRegs(resp.register, addr, cnt)
 			cb(null)
 		}, cb)
@@ -183,7 +208,7 @@ const methods = {
 		const values = args.slice(1).map(el => parseInt(el))
 
 		client.writeMultipleRegisters(addr, values).then(resp => {
-			console.log(resp)
+			log(resp)
 			cb(null)
 		}, err => {
 			cb(err)
@@ -198,7 +223,11 @@ function printCoils(coils, addr, cnt) {
 	for (let q = 0; q < cnt; ++q) {
 		const addr = paddString(addresses[q], 5, ' ')
 		const val = paddString(values[q], 5, ' ')
-		console.log(`  ${addr} : ${val}`)
+		log(`  ${addr} : ${val}`)
+	}
+
+	if (!bInteractive) {
+		console.log(coils.slice(0, cnt))
 	}
 }
 
@@ -213,7 +242,11 @@ function printRegs(regs, addr, cnt) {
 		const val = paddString(values[q], 5, ' ')
 		const hex = hexes[q]
 		const char = chars[q]
-		console.log(`  ${addr} : ${val} | ${hex} | ${char}`)
+		log(`  ${addr} : ${val} | ${hex} | ${char}`)
+	}
+
+	if (!bInteractive) {
+		console.log(regs)
 	}
 }
 
