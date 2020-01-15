@@ -2,7 +2,7 @@ const { headless } = require('./config')
 const UdpClient = require('./udp-modbus')
 const {
 	Printable,
-	PrintableRegister,
+	PrintableRegisters,
 	PrintableCoils
 } = require('./printable')
 
@@ -114,7 +114,7 @@ const methods = {
 		const cnt = Number(args[1]) || 1
 
 		client.readInputRegisters(addr, cnt).then(resp => {
-			cb(new PrintableRegister(resp.register, addr, cnt), null)
+			cb(new PrintableRegisters(resp.register, addr, cnt), null)
 		}, err => {
 			cb(null, err)
 		})
@@ -130,7 +130,7 @@ const methods = {
 		const addr = Number(args[0])
 		const cnt = Number(args[1]) || 1
 		client.readHoldingRegisters(addr, cnt).then(resp => {
-			cb(new PrintableRegister(resp.register, addr, cnt), null)
+			cb(new PrintableRegisters(resp.register, addr, cnt), null)
 		})
 	},
 
