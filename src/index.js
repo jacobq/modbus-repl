@@ -4,8 +4,6 @@ const process = require('process')
 const UdpModbus = require('./udp-modbus')
 const config = require('./config')
 
-console.log(config)
-
 let host = config.host
 let port = config.port
 let proto = config.proto === 'udp' ? 'udp' : 'tcp'
