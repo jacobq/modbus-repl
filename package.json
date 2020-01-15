@@ -1,17 +1,28 @@
 {
-  "name": "app_njs_modbus_tcp_repl",
-  "version": "1.0.0",
+  "name": "modbus-repl",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
+  "main": "src/index.js",
+  "scripts": {},
+  "keywords": [
+		"modbus",
+		"tcp",
+		"udp",
+		"repl"
+	],
+	"author": "Michal Molawka",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bam-ftw/modbus-repl"
+	},
   "license": "ISC",
   "dependencies": {
     "jsmodbus": "^1.2.7",
     "readline": "^1.3.0",
     "yargs": "^12.0.2"
+	},
+	"preferGlobal": true,
+  "bin": {
+    "modbus-repl": "./bin/start.js"
   }
 }
