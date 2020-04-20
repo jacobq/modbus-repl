@@ -3,7 +3,7 @@
 - `--host`, `-h` address of the machine hosting modbus server
 - `--port`, `-p` port on which modbus server is listening, by default `502`
 - `--proto`, `-P` protocol to be used, possible options are `udp` or `tcp`, by default `tcp`
-- `--headless`, `-H` if set given `--command` will be executed after successful connection, it's result will be printed to stdout and application will exit
+- `--headless`, `-H` if set, given `--command` will be executed after successful connection, it's result will be printed to stdout and application will exit
 - `--command`, `-c` command to be executed in headless mode
 
 ## commands
