@@ -73,16 +73,16 @@ const methods = {
 	 *
 	 * @param {UdpClient} client
 	 * @param {Array} args
-	 * @param {function(Error)} cb
+	 * @param {function(Printable, Error)} cb
 	 */
 	writeCoils(client, args, cb) {
 		const addr = Number(args[0])
 		const values = args.slice(1).map(el => Number(el) != 0)
 
 		client.writeMultipleCoils(addr, values).then(() => {
-			cb(null)
+			cb(null, null)
 		}, err => {
-			cb(err)
+			cb(null, err)
 		})
 	},
 
@@ -138,16 +138,16 @@ const methods = {
 	 *
 	 * @param {UdpClient} client
 	 * @param {Array} args
-	 * @param {function(Error)} cb
+	 * @param {function(Printable, Error)} cb
 	 */
 	writeHolding(client, args, cb) {
 		const addr = Number(args[0])
 		const values = args.slice(1).map(el => parseInt(el))
 
 		client.writeMultipleRegisters(addr, values).then(() => {
-			cb(null)
+			cb(null, null)
 		}, err => {
-			cb(err)
+			cb(null, err)
 		})
 	}
 }

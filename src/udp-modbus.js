@@ -79,8 +79,7 @@ class UdpModbus extends EventEmitter {
 
 			const data = this.prepareModbusMessageBuffer(WRITE_MULTIPLE_COILS, addr, finalBuf)
 			this.socketWrite(data).then(response => {
-
-					resolve(response)
+				resolve()
 			}, reject)
 		})
 	}
